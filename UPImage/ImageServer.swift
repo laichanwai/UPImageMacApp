@@ -18,7 +18,7 @@ enum LinkType : Int {
         let name = NSString(string: path).lastPathComponent
         switch type {
         case .markdown:
-            return "![" + name + "](" + path + mark + ")"
+            return "![" + name + "](" + path + suffix + ")"
         case .url:
             return path
         }
@@ -26,15 +26,21 @@ enum LinkType : Int {
     
 }
 
-var picUrlPrefix : String {
+var picUrlPrefix: String {
     get {
         return AppCache.shared.getQNConfig()["picUrlPrefix"]!
     }
 }
 
-var mark: String {
+var prefix: String {
     get {
-        return AppCache.shared.getQNConfig()["mark"] ?? ""
+        return AppCache.shared.getQNConfig()["prefix"] ?? ""
+    }
+}
+
+var suffix: String {
+    get {
+        return AppCache.shared.getQNConfig()["suffix"] ?? ""
     }
 }
 
@@ -177,14 +183,14 @@ extension ImageServer{
         }
     
         if let filePath = filePath {
-            let fileName = getDateString() + "\(arc())" + NSString(string: filePath).lastPathComponent
+            let fileName = prefix + "upi/" + getDateString() + "\(arc())" + NSString(string: filePath).lastPathComponent
             upManager?.putFile(filePath, key: fileName, token: token, complete: { (info, key, resp) in
                 hanlder(info, key, resp, NSImage(contentsOfFile: filePath)!)
             }, option: opt)
         }
         
         if let data = data {
-            let fileName = getDateString() + "\(timeInterval())" + "\(arc())" + getImageType(data)
+            let fileName = prefix + "upi/" + getDateString() + "\(timeInterval())" + "\(arc())" + getImageType(data)
             upManager?.put(data, key: fileName, token: token, complete: { (info, key, resp) in
                 hanlder(info, key, resp, NSImage(data: data)!)
             }, option: opt)

@@ -16,39 +16,34 @@ class ImagePreferencesViewController: NSViewController, MASPreferencesViewContro
 	var toolbarItemImage: NSImage? { get { return NSImage(named: NSImageNameUser) } }
 	var window: NSWindow?
 	@IBOutlet weak var statusLabel: NSTextField!
+    @IBOutlet weak var urlLabel: NSTextField!
 	@IBOutlet weak var accessKeyTextField: NSTextField!
 	@IBOutlet weak var secretKeyTextField: NSTextField!
 	@IBOutlet weak var bucketTextField: NSTextField!
 	@IBOutlet weak var urlPrefixTextField: NSTextField!
 	@IBOutlet weak var checkButton: NSButton!
-    @IBOutlet weak var markTextField: NSTextField!
+    @IBOutlet weak var suffixTextField: NSTextField!
+    @IBOutlet weak var prefixTextField: NSTextField!
+    
     
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		
-		if !AppCache.shared.useDefServer {
-			statusLabel.cell?.title = "目前使用自定义图床"
-			statusLabel.textColor = .magenta
-		} else {
-			statusLabel.cell?.title = "目前使用默认图床"
-			statusLabel.textColor = .red
-		}
 		
         if let configDic =  AppCache.shared.getQNUseConfig() {
             accessKeyTextField.cell?.title = configDic["accessKey"]!
             secretKeyTextField.cell?.title = configDic["secretKey"]!
             bucketTextField.cell?.title = configDic["scope"]!
             urlPrefixTextField.cell?.title = configDic["picUrlPrefix"]!
-            markTextField.cell?.title = configDic["mark"] ?? ""
+            prefixTextField.cell?.title = configDic["prefix"] ?? ""
+            suffixTextField.cell?.title = configDic["suffix"] ?? ""
         }
         
+        updateStatusLabel()
 		
 	}
 	@IBAction func setDefault(_ sender: AnyObject) {
 		AppCache.shared.useDefServer = true
-		statusLabel.cell?.title = "目前使用默认图床"
-		statusLabel.textColor = .red
-		
+		updateStatusLabel()
 	}
 	
 	@IBAction func setQiniuConfig(_ sender: AnyObject) {
@@ -82,19 +77,19 @@ class ImagePreferencesViewController: NSViewController, MASPreferencesViewContro
             self?.checkButton.isEnabled = true
             self?.checkButton.title = "验证配置"
             result.Success(success: {_ in
-                self?.statusLabel.cell?.title = "目前使用自定义图床"
-                self?.statusLabel.textColor = .magenta
                 self?.showAlert("验证成功", informative: "配置成功。")
                 let QN_Config = [
                     "picUrlPrefix"  : (self?.urlPrefixTextField.cell?.title)!,
                     "accessKey"     : (self?.accessKeyTextField.cell?.title)!,
                     "scope"         : (self?.bucketTextField.cell?.title)!,
                     "secretKey"     : (self?.secretKeyTextField.cell?.title)!,
-                    "mark"          : (self?.markTextField.cell?.title)!
+                    "prefix"        : (self?.prefixTextField.cell?.title)!,
+                    "suffix"        : (self?.suffixTextField.cell?.title)!
                 ]
                 AppCache.shared.setQNConfig(configDic: QN_Config);
                 AppCache.shared.useDefServer = false
-               
+                self?.updateStatusLabel()
+                
             }).Failure(failure: { _ in
                 self?.showAlert("验证失败", informative: "验证失败，请仔细填写信息。")
             })
@@ -117,4 +112,15 @@ class ImagePreferencesViewController: NSViewController, MASPreferencesViewContro
 		})
 	}
 	
+    func updateStatusLabel() {
+        if !AppCache.shared.useDefServer {
+            statusLabel.cell?.title = "目前使用自定义图床"
+            statusLabel.textColor = .magenta
+            urlLabel.cell?.title = AppCache.shared.getQNConfig()["picUrlPrefix"]! + (AppCache.shared.getQNConfig()["prefix"] ?? "") + "name" + (AppCache.shared.getQNConfig()["suffix"] ?? "")
+        } else {
+            statusLabel.cell?.title = "目前使用默认图床"
+            statusLabel.textColor = .red
+            urlLabel.cell?.title = ""
+        }
+    }
 }
